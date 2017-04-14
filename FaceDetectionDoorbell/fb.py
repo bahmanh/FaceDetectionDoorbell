@@ -21,3 +21,12 @@ class Facebook(object):
         except Exception as e:
             raise e
         return response
+
+    def recognize_faces(self, filepath):
+        post_id = upload_photo(filepath)['id']
+        delete_photo(post_id)
+
+
+    def parse_names(fb_response):
+
+
