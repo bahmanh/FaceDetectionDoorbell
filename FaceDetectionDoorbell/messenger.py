@@ -8,10 +8,10 @@ class Messenger():
 	
 	# message you wish to send, target phone number
 	# phone number must be verified through twilio
-	def send_text(self,msg,mynum):
+	def send_text(self, msg, send_num):
 		message = self.client.messages.create(
 			body=msg,
-			to=mynum,
+			to=send_num,
 			from_= TWILIO_NUMBER
 		)
 		print(message.sid)
