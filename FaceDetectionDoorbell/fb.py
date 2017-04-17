@@ -1,6 +1,7 @@
 from facepy import GraphAPI
 import requests 
 import json
+import time
 
 class Facebook(object):
 
@@ -27,16 +28,16 @@ class Facebook(object):
         URL = "https://www.facebook.com/photos/tagging/recognition/"
         headers = {
                 'accept':'*/*',
-                'accept-encoding': 'gzip, deflate, br',
+                'accept-encoding': 'gzip, deflate',
                 'accept-language':'en-US,en;q=0.8',
                 'content-type':'application/x-www-form-urlencoded',
-                'cookie':'l',
+                'cookie':cookie,
                 'origin':'https://www.facebook.com',
                 'referer':'https://www.facebook.com/',
                 'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
                 'x_fb_background_state':'1'
         }
-        payload = {
+        params = {
                 'dpr':'1',
                 'recognition_project':'composer_facerec',
                 'photos[0]':post_id,
@@ -50,12 +51,23 @@ class Facebook(object):
                 'fb_dtsg': fb_dtsg
             }
 
-        response = requests.post(URL, headers=headers, data=payload)
-        names = self.parse_names(response.text)
+        payload = None
+        
+        while not payload:
+            response = requests.post(URL, headers=headers, data=params)
+            # [9:] in order to skip 'for (;;);' to make string JSON compatible
+            payload = json.loads(response.text[9:])['payload']
+            response.raise_for_status()
+            time.sleep(1)
+
         self.delete_photo(post_id)
+        return self.parse_names(payload[0])
         
 
-    def parse_names(fb_response):
-        return
-
-
+    def parse_names(self, fb_response):
+        names = {}
+        faceboxes = fb_response['faceboxes']
+        for face in faceboxes:
+            for recognition in face['recognitions']:
+                names[recognition['user']['name']]= recognition['certainty'] 
+        return names
